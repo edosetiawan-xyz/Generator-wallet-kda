@@ -365,8 +365,6 @@ npm start
 - [ ] Dukungan Multi-Token MAINNET
 - [ ] UI Dashboard web untuk operasi non-teknis
 - [ ] Dukungan Jaringan Lain (Multi-Chain) – Support blockchain lain seperti Polygon & BSC,SOL dll.
-- [ ] Fitur scheduling untuk pengiriman terjadwal
-- [ ] Analisis transaksi dan reporting
 - [ ] Add Liquidity Pool - Swap - Remove LP
 
 
