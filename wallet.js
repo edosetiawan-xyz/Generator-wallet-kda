@@ -2310,7 +2310,7 @@ async function mainMenu() {
       await deleteWalletMenu()
       break
     case "exit":
-      console.log(chalk.green("\nTerima kasih telah menggunakan TEA Wallet Manager!"))
+      console.log(chalk.green("\nTerima kasih telah menggunakan TEA Wallet Manager — Powered by edosetiawan.tea"))
       process.exit(0)
   }
 
