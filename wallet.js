@@ -368,58 +368,41 @@ async function updateAllBalances() {
   console.log(chalk.cyan("\n⚡ Memperbarui saldo untuk semua dompet..."))
 
   try {
-    const batchSize = 5
-    const results = []
-
-    for (let i = 0; i < wallets.length; i += batchSize) {
-      const batch = wallets.slice(i, Math.min(i + batchSize, wallets.length))
-
-      const batchPromises = batch.map((wallet, batchIndex) => {
-        return new Promise(async (resolve) => {
-          try {
-            await new Promise((r) => setTimeout(r, batchIndex * 100))
-
-            const newBalance = await checkBalance(wallet.address)
-
-            displayProgressBar(i + batchIndex + 1, wallets.length)
-
-            resolve({ wallet, newBalance })
-          } catch (err) {
-            console.log(chalk.red(`\nError memeriksa saldo untuk ${wallet.name}: ${err.message}`))
-            resolve({ wallet, newBalance: wallet.balance || "0.0" })
-          }
-        })
-      })
-
-      const batchResults = await Promise.all(batchPromises)
-      results.push(...batchResults)
-
-      if (i + batchSize < wallets.length) {
-        await new Promise((r) => setTimeout(r, 1000))
-      }
-    }
-
-    for (const { wallet, newBalance } of results) {
-      if (wallet.balance !== newBalance && Number.parseFloat(wallet.balance) !== Number.parseFloat(newBalance)) {
-        const oldBalance = wallet.balance
-        wallet.balance = newBalance
-
-        if (Number.parseFloat(newBalance) > Number.parseFloat(oldBalance)) {
-          const received = Number.parseFloat(newBalance) - Number.parseFloat(oldBalance)
-          updateWalletStats(wallet.address, "in", received.toString())
-
-          if (monitoringActive && bot) {
-            await sendBalanceAlertToTelegram(wallet, oldBalance, newBalance, received.toString(), "in")
+    for (let i = 0; i < wallets.length; i++) {
+      const wallet = wallets[i]
+      
+      try {
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }
+        
+        const newBalance = await checkBalance(wallet.address)
+        
+        displayProgressBar(i + 1, wallets.length)
+        
+        if (wallet.balance !== newBalance && Number.parseFloat(wallet.balance) !== Number.parseFloat(newBalance)) {
+          const oldBalance = wallet.balance
+          wallet.balance = newBalance
+          
+          if (Number.parseFloat(newBalance) > Number.parseFloat(oldBalance)) {
+            const received = Number.parseFloat(newBalance) - Number.parseFloat(oldBalance)
+            updateWalletStats(wallet.address, "in", received.toString())
+            
+            if (monitoringActive && bot) {
+              await sendBalanceAlertToTelegram(wallet, oldBalance, newBalance, received.toString(), "in")
+            }
           }
         }
+      } catch (err) {
+        console.log(chalk.red(`\nError memeriksa saldo untuk ${wallet.name}: ${err.message}`))
       }
     }
-
+    
     const filled = "█".repeat(50)
     process.stdout.write(
-      `\r${chalk.cyan("⟳")} Memeriksa saldo: [${chalk.green(filled)}] ${chalk.green("100%")} (${wallets.length}/${wallets.length})`,
+      `\r${chalk.cyan("⟳")} Memeriksa saldo: [${chalk.green(filled)}] ${chalk.green("100%")} (${wallets.length}/${wallets.length})`
     )
-
+    
     console.log("\n" + chalk.green("✓ Semua saldo diperbarui"))
     saveWallets()
   } catch (error) {
@@ -1376,44 +1359,26 @@ async function checkBalanceMenu() {
 
     console.log(chalk.cyan(`\n⚡ Memperbarui saldo untuk ${groupWallets.length} dompet dalam grup "${group}"...`))
 
-    const batchSize = 5
-    const results = []
-
-    for (let i = 0; i < groupWallets.length; i += batchSize) {
-      const batch = groupWallets.slice(i, Math.min(i + batchSize, groupWallets.length))
-
-      const batchPromises = batch.map((wallet, batchIndex) => {
-        return new Promise(async (resolve) => {
-          try {
-            await new Promise((r) => setTimeout(r, batchIndex * 100))
-
-            const newBalance = await checkBalance(wallet.address)
-
-            displayProgressBar(i + batchIndex + 1, groupWallets.length)
-
-            resolve({ wallet, newBalance })
-          } catch (err) {
-            console.log(chalk.red(`\nError memeriksa saldo untuk ${wallet.name}: ${err.message}`))
-            resolve({ wallet, newBalance: wallet.balance || "0.0" })
-          }
-        })
-      })
-
-      const batchResults = await Promise.all(batchPromises)
-      results.push(...batchResults)
-
-      if (i + batchSize < groupWallets.length) {
-        await new Promise((r) => setTimeout(r, 1000))
+    for (let i = 0; i < groupWallets.length; i++) {
+      const wallet = groupWallets[i]
+      
+      try {
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }
+        
+        const newBalance = await checkBalance(wallet.address)
+        wallet.balance = newBalance
+        
+        displayProgressBar(i + 1, groupWallets.length)
+      } catch (err) {
+        console.log(chalk.red(`\nError memeriksa saldo untuk ${wallet.name}: ${err.message}`))
       }
-    }
-
-    for (const { wallet, newBalance } of results) {
-      wallet.balance = newBalance
     }
 
     const filled = "█".repeat(50)
     process.stdout.write(
-      `\r${chalk.cyan("⟳")} Memeriksa saldo: [${chalk.green(filled)}] ${chalk.green("100%")} (${groupWallets.length}/${groupWallets.length})`,
+      `\r${chalk.cyan("⟳")} Memeriksa saldo: [${chalk.green(filled)}] ${chalk.green("100%")} (${groupWallets.length}/${groupWallets.length})`
     )
 
     console.log("\n" + chalk.green("✓ Semua saldo diperbarui"))
@@ -2186,6 +2151,7 @@ async function mainMenu() {
       console.log(chalk.green(`║   ${addressText.padEnd(boxWidth - 6)} ║`))
 
       const statsText = `Transaksi: ${stats.txCount.toString().padEnd(10)} Masuk: ${stats.txInCount.toString().padEnd(10)} Keluar: ${stats.txOutCount.toString().padEnd(10)}`
+      console.log(`Keluar: ${stats.txOutCount.toString().padEnd(10)}`);
       console.log(chalk.green(`║   ${statsText.padEnd(boxWidth - 6)} ║`))
 
       console.log(
